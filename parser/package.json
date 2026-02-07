@@ -1,0 +1,15 @@
+{
+  "type": "module",
+  "scripts": {
+    "worker": "node src/instagram/worker.js"
+  },
+  "dependencies": {
+    "@tensorflow-models/coco-ssd": "^2.2.2",
+    "@tensorflow/tfjs-node": "^4.20.0",
+    "bullmq": "^5.0.0",
+    "ioredis": "^5.3.2",
+    "jpeg-js": "^0.4.4",
+    "mongoose": "^8.0.0",
+    "rss-parser": "^3.13.0"
+  }
+}
