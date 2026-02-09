@@ -1,11 +1,12 @@
 import mongoose from "mongoose";
 
-export const FeedItemSchema = new mongoose.Schema(
+const FeedItemSchema = new mongoose.Schema(
   {
     title: String,
 
     link: {
       type: String,
+      required: true,
       unique: true,
     },
 
@@ -14,14 +15,12 @@ export const FeedItemSchema = new mongoose.Schema(
     image: String,
     source: String,
     category: String,
-
-    timeline: Array,
-    audio: Object,
   },
   { timestamps: true }
 );
 
-// ✅ ВОТ ЭТОГО НЕ ХВАТАЛО
+// ✅ вот это важно
+FeedItemSchema.index({ link: 1 }, { unique: true });
+
 export const FeedItemModel =
-  mongoose.models.FeedItem ||
-  mongoose.model("FeedItem", FeedItemSchema);
+  mongoose.models.FeedItem || mongoose.model("FeedItem", FeedItemSchema);

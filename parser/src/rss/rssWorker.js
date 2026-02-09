@@ -23,28 +23,27 @@ const RSS_SOURCES = [
     name: "NYTimes",
     url: "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml",
   },
+  {
+    name: "GoogleNews",
+    url: "https://news.google.com/rss/search?q=kazakhstan",
+  },
 ];
 
-// Fix broken XML entities
 function fixXml(xml) {
   return xml.replace(/&(?!amp;|lt;|gt;|quot;|apos;)/g, "&amp;");
 }
 
 console.log("🚀 RSS Worker started...");
 
-//
-// ✅ AUTO CLEAN BEFORE PARSING
-//
+// ✅ очистка старых rss
 console.log("🧹 Cleaning old RSS news...");
 await FeedItemModel.deleteMany({ category: "rss" });
 console.log("✅ Old RSS news removed");
 
-//
-// ✅ PARSING LOOP
-//
+// ✅ парсинг
 for (const source of RSS_SOURCES) {
   try {
-    console.log("🔍 Parsing RSS:", source.name);
+    console.log("🔍 Parsing:", source.name);
 
     const raw = await axios.get(source.url, {
       headers: { "User-Agent": "Mozilla/5.0" },
@@ -52,28 +51,27 @@ for (const source of RSS_SOURCES) {
 
     const feed = await parser.parseString(fixXml(raw.data));
 
-    console.log("✅ Found items:", feed.items.length);
-
-    //
-    // ✅ Save only fresh items (limit 10)
-    //
     for (const item of feed.items.slice(0, 10)) {
-      console.log("✅ Saving:", item.title);
-
-      await FeedItemModel.create({
-        title: item.title,
-        link: item.link,
-        pubDate: item.pubDate || new Date(),
-        summary: item.contentSnippet || "",
-        category: "rss",
-        source: source.name,
-        image: "",
-      });
+      await FeedItemModel.updateOne(
+        { link: item.link },
+        {
+          $set: {
+            title: item.title,
+            link: item.link,
+            pubDate: item.pubDate || new Date(),
+            summary: item.contentSnippet || "",
+            category: "rss",
+            source: source.name,
+            image: "",
+          },
+        },
+        { upsert: true }
+      );
     }
 
     console.log("✅ Done:", source.name);
   } catch (err) {
-    console.log("❌ RSS failed:", source.name, err.message);
+    console.log("❌ Failed:", source.name, err.message);
   }
 }
 

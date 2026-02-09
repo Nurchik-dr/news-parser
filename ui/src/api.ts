@@ -20,3 +20,15 @@ export async function fetchFeed(): Promise<{ items: FeedItem[] }> {
 
   return res.json();
 }
+
+export async function refreshRSS() {
+  await fetch("http://localhost:4000/api/feed/refresh/rss", {
+    method: "POST",
+  });
+}
+
+export async function refreshFeed() {
+  await fetch(`${API_BASE}/api/feed/refresh`, {
+    method: "POST",
+  });
+}

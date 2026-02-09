@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchFeed, FeedItem } from "./api";
+import { fetchFeed, refreshRSS, FeedItem, refreshFeed } from "./api";
 import "./styles.css";
 
 export default function App() {
@@ -13,6 +13,17 @@ export default function App() {
     setLoading(false);
   }
 
+  async function refresh() {
+    setLoading(true);
+
+    await refreshRSS();
+
+    await new Promise((r) => setTimeout(r, 1500));
+
+    await load();
+  }
+
+
   useEffect(() => {
     load();
   }, []);
@@ -23,9 +34,20 @@ export default function App() {
         <h1>📰 MarketWatchr Feed</h1>
         <p>Instagram Reels + RSS News (автоматически)</p>
 
-        <button className="refresh" onClick={load}>
+        <button
+          className="refresh"
+          onClick={async () => {
+            setLoading(true);
+
+            await refreshFeed(); // запускает worker
+            await load();        // загружает новости
+
+            setLoading(false);
+          }}
+        >
           🔄 Обновить
         </button>
+
       </header>
 
       {loading && <p>Загрузка...</p>}
@@ -38,26 +60,20 @@ export default function App() {
         {items.map((item) => (
           <article key={item.link + item.pubDate} className="card">
             <div className="top">
-              <span className={`badge ${item.category}`}>
-                {item.category}
-              </span>
+              <span className={`badge ${item.category}`}>{item.category}</span>
               <span className="source">{item.source}</span>
             </div>
 
             <h3>{item.title}</h3>
 
-            {item.image && (
-              <img src={item.image} alt={item.title} />
-            )}
+            {item.image && <img src={item.image} alt={item.title} />}
 
             <p className="summary">{item.summary}</p>
 
             <div className="bottom">
-              <time>
-                {new Date(item.pubDate).toLocaleString("ru-RU")}
-              </time>
+              <time>{new Date(item.pubDate).toLocaleString("ru-RU")}</time>
 
-              <a href={item.link} target="_blank">
+              <a href={item.link} target="_blank" rel="noreferrer">
                 Открыть →
               </a>
             </div>
@@ -67,3 +83,4 @@ export default function App() {
     </div>
   );
 }
+
